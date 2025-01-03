@@ -1,11 +1,126 @@
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormArray } from '@angular/forms';
+
+@Component({
+  selector: 'app-dynamic-form',
+  templateUrl: './dynamic-form.component.html'
+})
+export class DynamicFormComponent implements OnInit {
+  form: FormGroup;
+
+  constructor(private fb: FormBuilder) {}
+
+  ngOnInit() {
+    this.form = this.fb.group({
+      Dataflows: this.fb.array([]) // Initialize as an empty array
+    });
+
+    // Populate the form with the given JSON
+    this.loadJsonToForm(this.sampleJson);
+  }
+
+  // Sample JSON to load into the form
+  sampleJson = {
+    Dataflows: [
+      {
+        Sources: [
+          {
+            stype: "sql",
+            Tasks: [
+              {
+                name: "task1",
+                query: "*",
+                schema: "db",
+                Subtasks: [
+                  { id: "sb456", name: "sbt", query: "*" },
+                  { id: "sb457", name: "sbt2", query: "*" }
+                ]
+              },
+              { name: "task2", query: "*", schema: "db" }
+            ]
+          }
+        ],
+        Transformations: [{ query: "*", name: "tr" }],
+        Sinks: [
+          {
+            sTyle: "sql",
+            Tasks: [
+              { name: "tks1", query: "*" },
+              { name: "tks2", query: "*" }
+            ]
+          }
+        ]
+      }
+    ]
+  };
+
+  // Create and populate the form dynamically based on the JSON
+  loadJsonToForm(json: any) {
+    const dataflows = this.form.get('Dataflows') as FormArray;
+    json.Dataflows.forEach((dataflow: any) => {
+      dataflows.push(this.fb.group({
+        Sources: this.fb.array(dataflow.Sources.map((source: any) => this.createSourceGroup(source))),
+        Transformations: this.fb.array(dataflow.Transformations.map((transformation: any) =>
+          this.fb.group(transformation)
+        )),
+        Sinks: this.fb.array(dataflow.Sinks.map((sink: any) => this.createSinkGroup(sink)))
+      }));
+    });
+  }
+
+  // Create a FormGroup for a Source
+  createSourceGroup(source: any): FormGroup {
+    return this.fb.group({
+      stype: [source.stype],
+      Tasks: this.fb.array(source.Tasks.map((task: any) => this.createTaskGroup(task)))
+    });
+  }
+
+  // Create a FormGroup for a Task
+  createTaskGroup(task: any): FormGroup {
+    return this.fb.group({
+      name: [task.name],
+      query: [task.query],
+      schema: [task.schema],
+      Subtasks: this.fb.array(task.Subtasks?.map((subtask: any) =>
+        this.fb.group(subtask)
+      ) || [])
+    });
+  }
+
+  // Create a FormGroup for a Sink
+  createSinkGroup(sink: any): FormGroup {
+    return this.fb.group({
+      sTyle: [sink.sTyle],
+      Tasks: this.fb.array(sink.Tasks.map((task: any) => this.fb.group(task)))
+    });
+  }
+
+  // Get the JSON output from the form
+  getJson() {
+    console.log(this.form.value);
+    return this.form.value;
+  }
+
+  // Helper to get Dataflows FormArray
+  get dataflows(): FormArray {
+    return this.form.get('Dataflows') as FormArray;
+  }
+}
+
+
+
+
 <form [formGroup]="form">
   <div formArrayName="Dataflows">
-    <div *ngFor="let dataflow of (form.get('Dataflows') as FormArray).controls; let i = index" [formGroupName]="i">
+    <div *ngFor="let dataflow of dataflows.controls; let i = index" [formGroupName]="i">
       <h3>Dataflow {{ i + 1 }}</h3>
+
       <div formArrayName="Sources">
         <div *ngFor="let source of (dataflow.get('Sources') as FormArray).controls; let j = index" [formGroupName]="j">
           <label>Source Type:</label>
           <input formControlName="stype" />
+
           <div formArrayName="Tasks">
             <div *ngFor="let task of (source.get('Tasks') as FormArray).controls; let k = index" [formGroupName]="k">
               <label>Task Name:</label>
@@ -14,7 +129,8 @@
               <input formControlName="query" />
               <label>Schema:</label>
               <input formControlName="schema" />
-              <div formArrayName="Subtasks" *ngIf="task.get('Subtasks')">
+
+              <div formArrayName="Subtasks">
                 <div *ngFor="let subtask of (task.get('Subtasks') as FormArray).controls; let l = index" [formGroupName]="l">
                   <label>Subtask ID:</label>
                   <input formControlName="id" />
@@ -42,6 +158,7 @@
         <div *ngFor="let sink of (dataflow.get('Sinks') as FormArray).controls; let n = index" [formGroupName]="n">
           <label>Sink Style:</label>
           <input formControlName="sTyle" />
+
           <div formArrayName="Tasks">
             <div *ngFor="let task of (sink.get('Tasks') as FormArray).controls; let o = index" [formGroupName]="o">
               <label>Task Name:</label>
