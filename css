@@ -1,0 +1,161 @@
+// css
+
+/* General form styling */
+form {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Header for each dataflow */
+.dataflow-header {
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #ddd;
+}
+
+.dataflow-header h3 {
+  font-size: 1.6rem;
+  color: #333;
+}
+
+/* Block section for Sources, Transformations, and Sinks */
+.block {
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.section-title {
+  font-size: 1.4rem;
+  color: #444;
+  margin-bottom: 10px;
+}
+
+/* Form control elements */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.subfield-group {
+  margin-left: 20px;
+}
+
+.subfield-group label {
+  font-weight: bold;
+}
+
+.subfield-group .input-field {
+  width: calc(100% - 20px); /* Adjust width slightly for indentation */
+}
+
+/* Optional: Add some hover effect for inputs */
+.input-field:hover {
+  border-color: #007bff;
+}
+
+.input-field:focus {
+  border-color: #0056b3;
+  outline: none;
+}
+
+/* Button styling */
+button {
+  display: block;
+  width: 200px;
+  margin: 20px auto;
+  padding: 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+
+
+<form [formGroup]="form">
+  <div formArrayName="Dataflows">
+    <div *ngFor="let dataflow of dataflows.controls; let i = index" [formGroupName]="i" class="dataflow-container">
+      <div class="dataflow-header">
+        <h3>Dataflow {{ i + 1 }}</h3>
+      </div>
+
+      <!-- Sources Block -->
+      <div class="block">
+        <h4 class="section-title">Sources</h4>
+        <div formArrayName="Sources">
+          <div *ngFor="let source of (dataflow.get('Sources') as FormArray).controls; let j = index" [formGroupName]="j" class="form-group">
+            <div *ngFor="let key of objectKeys(source.value)">
+              <label>{{ key }}:</label>
+              <input *ngIf="!isArray(source.value[key])" [formControlName]="key" class="input-field" />
+              <div *ngIf="isArray(source.value[key])" formArrayName="{{ key }}">
+                <div *ngFor="let subField of (source.get(key) as FormArray).controls; let k = index" [formGroupName]="k" class="subfield-group">
+                  <div *ngFor="let subKey of objectKeys(subField.value)">
+                    <label>{{ subKey }}:</label>
+                    <input [formControlName]="subKey" class="input-field" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transformations Block -->
+      <div class="block">
+        <h4 class="section-title">Transformations</h4>
+        <div formArrayName="Transformations">
+          <div *ngFor="let transformation of (dataflow.get('Transformations') as FormArray).controls; let m = index" [formGroupName]="m" class="form-group">
+            <div *ngFor="let key of objectKeys(transformation.value)">
+              <label>{{ key }}:</label>
+              <input [formControlName]="key" class="input-field" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sinks Block -->
+      <div class="block">
+        <h4 class="section-title">Sinks</h4>
+        <div formArrayName="Sinks">
+          <div *ngFor="let sink of (dataflow.get('Sinks') as FormArray).controls; let n = index" [formGroupName]="n" class="form-group">
+            <div *ngFor="let key of objectKeys(sink.value)">
+              <label>{{ key }}:</label>
+              <input *ngIf="!isArray(sink.value[key])" [formControlName]="key" class="input-field" />
+              <div *ngIf="isArray(sink.value[key])" formArrayName="{{ key }}">
+                <div *ngFor="let subField of (sink.get(key) as FormArray).controls; let p = index" [formGroupName]="p" class="subfield-group">
+                  <div *ngFor="let subKey of objectKeys(subField.value)">
+                    <label>{{ subKey }}:</label>
+                    <input [formControlName]="subKey" class="input-field" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<button (click)="getJson()">Get JSON</button>
