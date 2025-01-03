@@ -1,13 +1,13 @@
 <form [formGroup]="form">
   <div formArrayName="Dataflows">
-    <div *ngFor="let dataflow of form.get('Dataflows').controls; let i = index" [formGroupName]="i">
+    <div *ngFor="let dataflow of (form.get('Dataflows') as FormArray).controls; let i = index" [formGroupName]="i">
       <h3>Dataflow {{ i + 1 }}</h3>
       <div formArrayName="Sources">
-        <div *ngFor="let source of dataflow.get('Sources').controls; let j = index" [formGroupName]="j">
+        <div *ngFor="let source of (dataflow.get('Sources') as FormArray).controls; let j = index" [formGroupName]="j">
           <label>Source Type:</label>
           <input formControlName="stype" />
           <div formArrayName="Tasks">
-            <div *ngFor="let task of source.get('Tasks').controls; let k = index" [formGroupName]="k">
+            <div *ngFor="let task of (source.get('Tasks') as FormArray).controls; let k = index" [formGroupName]="k">
               <label>Task Name:</label>
               <input formControlName="name" />
               <label>Query:</label>
@@ -15,7 +15,7 @@
               <label>Schema:</label>
               <input formControlName="schema" />
               <div formArrayName="Subtasks" *ngIf="task.get('Subtasks')">
-                <div *ngFor="let subtask of task.get('Subtasks').controls; let l = index" [formGroupName]="l">
+                <div *ngFor="let subtask of (task.get('Subtasks') as FormArray).controls; let l = index" [formGroupName]="l">
                   <label>Subtask ID:</label>
                   <input formControlName="id" />
                   <label>Subtask Name:</label>
@@ -30,7 +30,7 @@
       </div>
 
       <div formArrayName="Transformations">
-        <div *ngFor="let transformation of dataflow.get('Transformations').controls; let m = index" [formGroupName]="m">
+        <div *ngFor="let transformation of (dataflow.get('Transformations') as FormArray).controls; let m = index" [formGroupName]="m">
           <label>Transformation Query:</label>
           <input formControlName="query" />
           <label>Transformation Name:</label>
@@ -39,11 +39,11 @@
       </div>
 
       <div formArrayName="Sinks">
-        <div *ngFor="let sink of dataflow.get('Sinks').controls; let n = index" [formGroupName]="n">
+        <div *ngFor="let sink of (dataflow.get('Sinks') as FormArray).controls; let n = index" [formGroupName]="n">
           <label>Sink Style:</label>
           <input formControlName="sTyle" />
           <div formArrayName="Tasks">
-            <div *ngFor="let task of sink.get('Tasks').controls; let o = index" [formGroupName]="o">
+            <div *ngFor="let task of (sink.get('Tasks') as FormArray).controls; let o = index" [formGroupName]="o">
               <label>Task Name:</label>
               <input formControlName="name" />
               <label>Query:</label>
