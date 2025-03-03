@@ -1,110 +1,47 @@
-import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup } from '@angular/forms';
+fetch('your-api-endpoint')
+    .then(response => response.json())
+    .then(data => {
+        const categories = [...new Set(data.map(item => item.category))];
+        const statuses = [...new Set(data.map(item => item.status))];
+        
+        const seriesData = statuses.map(status => {
+            return {
+                name: status,
+                data: categories.map(category => 
+                    data.filter(item => item.status === status && item.category === category)
+                        .reduce((sum, item) => sum + item.count, 0)
+                )
+            };
+        });
 
-@Component({
-  selector: 'app-dynamic-json-form',
-  templateUrl: './dynamic-json-form.component.html',
-  styleUrls: ['./dynamic-json-form.component.css']
-})
-export class DynamicJsonFormComponent implements OnInit {
-  form: FormGroup;
-  initialJson = {
-    Dataflows: [
-      {
-        Sources: [
-          {
-            stype: "sql",
-            Tasks: [
-              {
-                name: "task1",
-                query: "*",
-                schema: "db",
-                Subtasks: [
-                  { id: "sb456", name: "sbt", query: "*" },
-                  { id: "sb457", name: "sbt2", query: "*" }
-                ]
-              },
-              {
-                name: "task2",
-                query: "*",
-                schema: "db"
-              }
-            ]
-          }
-        ],
-        Transformations: [{ query: "*", name: "tr" }],
-        Sinks: [
-          {
-            sTyle: "sql",
-            Tasks: [
-              { name: "tks1", query: "*" },
-              { name: "tks2", query: "*" }
-            ]
-          }
-        ]
-      }
-    ]
-  };
-
-  constructor(private fb: FormBuilder) {}
-
-  ngOnInit(): void {
-    this.form = this.fb.group({
-      Dataflows: this.fb.array(this.initialJson.Dataflows.map(this.createDataflow))
-    });
-  }
-
-  createDataflow(dataflow): FormGroup {
-    return this.fb.group({
-      Sources: this.fb.array(dataflow.Sources.map(this.createSource)),
-      Transformations: this.fb.array(dataflow.Transformations.map(this.createTransformation)),
-      Sinks: this.fb.array(dataflow.Sinks.map(this.createSink))
-    });
-  }
-
-  createSource(source): FormGroup {
-    return this.fb.group({
-      stype: [source.stype],
-      Tasks: this.fb.array(source.Tasks.map(this.createTask))
-    });
-  }
-
-  createTask(task): FormGroup {
-    return this.fb.group({
-      name: [task.name],
-      query: [task.query],
-      schema: [task.schema || null],
-      Subtasks: task.Subtasks
-        ? this.fb.array(task.Subtasks.map(this.createSubtask))
-        : this.fb.array([])
-    });
-  }
-
-  createSubtask(subtask): FormGroup {
-    return this.fb.group({
-      id: [subtask.id],
-      name: [subtask.name],
-      query: [subtask.query]
-    });
-  }
-
-  createTransformation(transformation): FormGroup {
-    return this.fb.group({
-      query: [transformation.query],
-      name: [transformation.name]
-    });
-  }
-
-  createSink(sink): FormGroup {
-    return this.fb.group({
-      sTyle: [sink.sTyle],
-      Tasks: this.fb.array(sink.Tasks.map(this.createTask))
-    });
-  }
-
-  // Convert form to JSON
-  getJson() {
-    console.log(this.form.value);
-    return this.form.value;
-  }
-}
+        Highcharts.chart('container', {
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: 'Submission Counts by Category and Status'
+            },
+            xAxis: {
+                categories: categories,
+                title: {
+                    text: 'Categories'
+                }
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: 'Count'
+                }
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'top',
+                floating: true,
+                borderWidth: 1,
+                backgroundColor: '#FFFFFF'
+            },
+            series: seriesData
+        });
+    })
+    .catch(error => console.error('Error fetching data:', error));
