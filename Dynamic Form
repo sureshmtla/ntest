@@ -1,6 +1,11 @@
 fetch('your-api-endpoint')
     .then(response => response.json())
     .then(data => {
+
+    data.forEach(item => {
+            item.category = new Date(item.category).toISOString().split('T')[0];
+        });
+
         const categories = [...new Set(data.map(item => item.category))];
         const statuses = [...new Set(data.map(item => item.status))];
         
