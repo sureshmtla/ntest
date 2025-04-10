@@ -1,39 +1,33 @@
-<div style="display: flex; font-family: sans-serif; margin: 40px; gap: 0; color: white;">
+<div style="display: flex; font-family: sans-serif; margin: 40px; color: white;">
 
   <!-- Step 1 -->
-  <div style="position: relative; z-index: 3; margin-right: -20px;">
-    <div style="
-      background: #4CAF50;
-      padding: 10px 40px 10px 20px;
-      clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%);
-    ">
-      <div style="font-size: 16px; font-weight: bold;">Step 1</div>
-      <div style="font-size: 12px; opacity: 0.9;">Basic Info</div>
-    </div>
-  </div>
+  <svg width="220" height="60" xmlns="http://www.w3.org/2000/svg" style="margin-right: -20px; z-index: 3; position: relative;">
+    <polygon points="0,0 200,0 220,30 200,60 0,60" fill="#4CAF50" />
+    <foreignObject x="10" y="10" width="200" height="40">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: 16px; font-weight: bold;">Step 1
+        <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Basic Info</div>
+      </div>
+    </foreignObject>
+  </svg>
 
   <!-- Step 2 -->
-  <div style="position: relative; z-index: 2; margin-right: -20px;">
-    <div style="
-      background: #FFA726;
-      padding: 10px 40px 10px 20px;
-      clip-path: polygon(8% 0, 92% 0, 100% 50%, 92% 100%, 8% 100%);
-    ">
-      <div style="font-size: 16px; font-weight: bold;">Step 2</div>
-      <div style="font-size: 12px; opacity: 0.9;">Details</div>
-    </div>
-  </div>
+  <svg width="220" height="60" xmlns="http://www.w3.org/2000/svg" style="margin-right: -20px; z-index: 2; position: relative;">
+    <polygon points="20,0 200,0 220,30 200,60 20,60" fill="#FFA726" />
+    <foreignObject x="30" y="10" width="160" height="40">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: 16px; font-weight: bold;">Step 2
+        <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Details</div>
+      </div>
+    </foreignObject>
+  </svg>
 
-  <!-- Step 3 (fixed) -->
-  <div style="position: relative; z-index: 1;">
-    <div style="
-      background: #29B6F6;
-      padding: 10px 40px 10px 20px;
-      clip-path: polygon(8% 0, 100% 0, 100% 50%, 100% 100%, 8% 100%);
-    ">
-      <div style="font-size: 16px; font-weight: bold;">Step 3</div>
-      <div style="font-size: 12px; opacity: 0.9;">Confirmation</div>
-    </div>
-  </div>
+  <!-- Step 3 -->
+  <svg width="200" height="60" xmlns="http://www.w3.org/2000/svg" style="z-index: 1; position: relative;">
+    <polygon points="20,0 200,0 200,60 20,60" fill="#29B6F6" />
+    <foreignObject x="30" y="10" width="160" height="40">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: 16px; font-weight: bold;">Step 3
+        <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Confirmation</div>
+      </div>
+    </foreignObject>
+  </svg>
 
 </div>
