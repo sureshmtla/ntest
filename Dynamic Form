@@ -1,13 +1,22 @@
-BEGIN
-  FOR t IN (SELECT owner, table_name, column_name
-            FROM all_tab_columns
-            WHERE data_type IN ('VARCHAR2', 'CHAR')) LOOP
-    EXECUTE IMMEDIATE
-      'BEGIN
-         IF EXISTS (SELECT 1 FROM ' || t.owner || '.' || t.table_name ||
-         ' WHERE ' || t.column_name || ' LIKE ''%John Doe%'') THEN
-           DBMS_OUTPUT.PUT_LINE(''' || t.owner || '.' || t.table_name || '.' || t.column_name || ''');
-         END IF;
-       END;';
-  END LOOP;
-END;
+onGridReady(params) {
+  setTimeout(() => {
+    const allColumnIds: string[] = [];
+    params.columnApi.getAllColumns()?.forEach((column) => {
+      allColumnIds.push(column.getColId());
+    });
+
+    // Auto size
+    params.columnApi.autoSizeColumns(allColumnIds);
+
+    // Fit if there's space left
+    const totalWidth = params.columnApi.getAllColumns()
+      ?.map(col => col.getActualWidth())
+      .reduce((sum, width) => sum + width, 0);
+
+    const gridWidth = params.api.gridPanel.getWidth(); // or use container width
+
+    if (totalWidth < gridWidth) {
+      params.api.sizeColumnsToFit();
+    }
+  });
+}
