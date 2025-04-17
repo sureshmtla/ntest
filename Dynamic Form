@@ -1,33 +1,5 @@
-<div style="display: flex; font-family: sans-serif; margin: 40px; color: white;">
-
-  <!-- Step 1 -->
-  <svg width="220" height="60" xmlns="http://www.w3.org/2000/svg" style="margin-right: -20px; z-index: 3; position: relative;">
-    <polygon points="0,0 200,0 220,30 200,60 0,60" fill="#4CAF50" />
-    <foreignObject x="10" y="10" width="200" height="40">
-      <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: 16px; font-weight: bold;">Step 1
-        <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Basic Info</div>
-      </div>
-    </foreignObject>
-  </svg>
-
-  <!-- Step 2 -->
-  <svg width="220" height="60" xmlns="http://www.w3.org/2000/svg" style="margin-right: -20px; z-index: 2; position: relative;">
-    <polygon points="20,0 200,0 220,30 200,60 20,60" fill="#FFA726" />
-    <foreignObject x="30" y="10" width="160" height="40">
-      <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: 16px; font-weight: bold;">Step 2
-        <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Details</div>
-      </div>
-    </foreignObject>
-  </svg>
-
-  <!-- Step 3 -->
-  <svg width="200" height="60" xmlns="http://www.w3.org/2000/svg" style="z-index: 1; position: relative;">
-    <polygon points="20,0 200,0 200,60 20,60" fill="#29B6F6" />
-    <foreignObject x="30" y="10" width="160" height="40">
-      <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: 16px; font-weight: bold;">Step 3
-        <div style="font-size: 12px; font-weight: normal; opacity: 0.9;">Confirmation</div>
-      </div>
-    </foreignObject>
-  </svg>
-
-</div>
+SELECT 'SELECT ''' || table_name || ''' AS table_name, ''' || column_name || ''' AS column_name FROM ' || table_name || 
+       ' WHERE TO_CHAR(' || column_name || ') LIKE ''%search_term%'';' AS search_sql
+FROM all_tab_columns
+WHERE data_type IN ('VARCHAR2', 'CHAR', 'NVARCHAR2', 'CLOB')
+AND owner = 'YOUR_SCHEMA';
