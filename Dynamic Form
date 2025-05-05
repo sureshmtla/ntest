@@ -1,22 +1,87 @@
-onGridReady(params) {
-  setTimeout(() => {
-    const allColumnIds: string[] = [];
-    params.columnApi.getAllColumns()?.forEach((column) => {
-      allColumnIds.push(column.getColId());
-    });
+CREATE OR REPLACE PROCEDURE sync_by_template(
+  p_template_id IN NUMBER,
+  p_process_id  IN NUMBER
+) AS
+  v_stage_table   VARCHAR2(100);
+  v_target_table  VARCHAR2(100);
+  v_key_cols      VARCHAR2(1000);
+  v_cmp_cols      VARCHAR2(1000);
+  v_on_clause     VARCHAR2(2000);
+  v_set_clause    VARCHAR2(2000);
+  v_insert_cols   VARCHAR2(2000);
+  v_insert_vals   VARCHAR2(2000);
+  v_where_clause  VARCHAR2(2000);
+  v_sql           CLOB;
+BEGIN
+  -- 1. Read template metadata
+  SELECT stage_table_name, target_table_name, key_columns, compare_columns
+  INTO v_stage_table, v_target_table, v_key_cols, v_cmp_cols
+  FROM template_table
+  WHERE template_id = p_template_id;
 
-    // Auto size
-    params.columnApi.autoSizeColumns(allColumnIds);
+  -- 2. Build ON clause from key columns
+  v_on_clause := '';
+  FOR rec IN (
+    SELECT TRIM(REGEXP_SUBSTR(v_key_cols, '[^,]+', 1, LEVEL)) AS col
+    FROM dual CONNECT BY LEVEL <= REGEXP_COUNT(v_key_cols, ',') + 1
+  ) LOOP
+    v_on_clause := v_on_clause || 'tgt.' || rec.col || ' = stg.' || rec.col || ' AND ';
+  END LOOP;
+  v_on_clause := RTRIM(v_on_clause, ' AND ');
 
-    // Fit if there's space left
-    const totalWidth = params.columnApi.getAllColumns()
-      ?.map(col => col.getActualWidth())
-      .reduce((sum, width) => sum + width, 0);
+  -- 3. Build SET clause for updates with conditional check
+  v_set_clause := '';
+  v_where_clause := '';
+  FOR rec IN (
+    SELECT TRIM(REGEXP_SUBSTR(v_cmp_cols, '[^,]+', 1, LEVEL)) AS col
+    FROM dual CONNECT BY LEVEL <= REGEXP_COUNT(v_cmp_cols, ',') + 1
+  ) LOOP
+    v_set_clause := v_set_clause || 'tgt.' || rec.col || ' = stg.' || rec.col || ', ';
+    v_where_clause := v_where_clause || 'NVL(tgt.' || rec.col || ', ''~'') <> NVL(stg.' || rec.col || ', ''~'') OR ';
+  END LOOP;
+  v_set_clause := RTRIM(v_set_clause, ', ');
+  v_where_clause := RTRIM(v_where_clause, ' OR ');
 
-    const gridWidth = params.api.gridPanel.getWidth(); // or use container width
+  -- 4. Build INSERT column and value lists
+  v_insert_cols := v_key_cols || ',' || v_cmp_cols || ',active_flag';
+  v_insert_vals := '';
+  FOR rec IN (
+    SELECT TRIM(REGEXP_SUBSTR(v_key_cols || ',' || v_cmp_cols, '[^,]+', 1, LEVEL)) AS col
+    FROM dual CONNECT BY LEVEL <= REGEXP_COUNT(v_key_cols || ',' || v_cmp_cols, ',') + 1
+  ) LOOP
+    v_insert_vals := v_insert_vals || 'stg.' || rec.col || ', ';
+  END LOOP;
+  v_insert_vals := RTRIM(v_insert_vals, ', ') || ', ''Y''';
 
-    if (totalWidth < gridWidth) {
-      params.api.sizeColumnsToFit();
-    }
-  });
-}
+  -- 5. Build MERGE statement
+  v_sql := 'MERGE INTO ' || v_target_table || ' tgt ' ||
+           'USING (SELECT * FROM ' || v_stage_table || ' WHERE process_id = ' || p_process_id || ') stg ' ||
+           'ON (' || v_on_clause || ' AND tgt.active_flag = ''Y'') ' ||
+           'WHEN MATCHED THEN UPDATE SET ' || v_set_clause ||
+           ' WHERE ' || v_where_clause || ' ' ||
+           'WHEN NOT MATCHED THEN INSERT (' || v_insert_cols || ') VALUES (' || v_insert_vals || ')';
+
+  -- 6. Execute MERGE
+  EXECUTE IMMEDIATE v_sql;
+
+  -- 7. Deactivate records in target that are missing from stage
+  v_sql := 'UPDATE ' || v_target_table || ' tgt SET active_flag = ''N'' ' ||
+           'WHERE tgt.active_flag = ''Y'' AND NOT EXISTS (' ||
+           'SELECT 1 FROM ' || v_stage_table || ' stg WHERE stg.process_id = ' || p_process_id || ' AND ';
+
+  FOR rec IN (
+    SELECT TRIM(REGEXP_SUBSTR(v_key_cols, '[^,]+', 1, LEVEL)) AS col
+    FROM dual CONNECT BY LEVEL <= REGEXP_COUNT(v_key_cols, ',') + 1
+  ) LOOP
+    v_sql := v_sql || 'tgt.' || rec.col || ' = stg.' || rec.col || ' AND ';
+  END LOOP;
+  v_sql := RTRIM(v_sql, ' AND ') || ')';
+
+  -- 8. Execute deactivate step
+  EXECUTE IMMEDIATE v_sql;
+
+EXCEPTION
+  WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+END;
+/
